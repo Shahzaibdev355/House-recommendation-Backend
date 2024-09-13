@@ -114,7 +114,7 @@ def predict():
 
 @app.route('/states', methods=['GET'])
 def get_states():
-    return send_from_directory(directory='.', path='state_name.json', as_attachment=False)
+    return send_from_directory(directory='.', path='https://raw.githubusercontent.com/Shahzaibdev355/House-recommendation-Backend/master/state_name.json', as_attachment=False)
 
 
 
