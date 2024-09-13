@@ -25,6 +25,14 @@ ms.fit(df[['PRICE', 'PROPERTYSQFT', 'BEDS', 'BATH']])
 with open('state_label_encoder.pkl', 'rb') as f:
     le = pickle.load(f)
 
+
+
+# Route to test if the backend is working
+@app.route('/test', methods=['GET'])
+def test():
+    return jsonify({"message": "Backend is working"}), 200
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
