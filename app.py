@@ -15,7 +15,7 @@ CORS(app)
 model = load_model('new_model.h5')
 
 # Load your data
-df = pd.read_csv(r"C:\Users\shahzaib sheikh\OneDrive\Documents\Desktop\Shahzaib\Ai project\Fullstack\backend\NY-House-Dataset.csv")
+df = pd.read_csv("https://raw.githubusercontent.com/Shahzaibdev355/House-recommendation-Backend/master/NY-House-Dataset.csv")
 
 # Initialize the MinMaxScaler and fit it using the training data (same as during training)
 ms = MinMaxScaler()
