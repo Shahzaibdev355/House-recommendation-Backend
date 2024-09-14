@@ -2,7 +2,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU
 
 
-
+import requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS  # Import the CORS library
 import numpy as np
