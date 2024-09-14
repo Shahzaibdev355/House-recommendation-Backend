@@ -40,32 +40,41 @@ with open('state_label_encoder.pkl', 'rb') as f:
 def test():
     return jsonify({"message": "Backend is working"}), 200   
 
-@app.route("/predict", methods=["POST"])
+
+
+
+@app.route('/predict', methods=['POST'])
 def predict():
     try:
         data = request.get_json()
 
-        # Extract features from request
-        price = data.get("PRICE")
-        beds = data.get("BEDS")
-        baths = data.get("BATH")
-        state = data.get("STATE")  # User input state as a string
-        sqrt = data.get("PROPERTYSQFT")
+        # Extract features from request and convert to numeric types
+        try:
+            price = float(data.get('PRICE'))
+            beds = int(data.get('BEDS'))
+            baths = int(data.get('BATH'))
+            state = data.get('STATE')  # User input state as a string
+            sqrt = float(data.get('PROPERTYSQFT'))
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid data type in request'}), 400
 
         # Check if all required fields are provided
         if None in [price, beds, baths, state, sqrt]:
-            return jsonify({"error": "Missing data in request"}), 400
+            return jsonify({'error': 'Missing data in request'}), 400
 
         # Transform the state input using the LabelEncoder
         try:
             encoded_state = le.transform([state])[0]
         except ValueError:
-            return jsonify({"error": "Invalid state value"}), 400
+            return jsonify({'error': 'Invalid state value'}), 400
 
         # Prepare the user input as a DataFrame (same structure as your training data)
-        user_input = pd.DataFrame(
-            {"PRICE": [price], "PROPERTYSQFT": [sqrt], "BEDS": [beds], "BATH": [baths]}
-        )
+        user_input = pd.DataFrame({
+            'PRICE': [price],
+            'PROPERTYSQFT': [sqrt],
+            'BEDS': [beds],
+            'BATH': [baths]
+        })
 
         # Normalize user input with same MinMaxScaler
         user_input_normalized = ms.transform(user_input)
@@ -76,52 +85,40 @@ def predict():
         user_input_beds = user_input_normalized[0][2]
         user_input_baths = user_input_normalized[0][3]
 
-        # to compute similarity score based on user input
+        # Create a function to compute similarity score based on user input
         def calculate_similarity(row):
-            price_diff = abs(row["PRICE"] - price) / max(
-                df["PRICE"]
-            )  # Normalize difference
-            sqrt_diff = abs(row["PROPERTYSQFT"] - sqrt) / max(
-                df["PROPERTYSQFT"]
-            )  # Normalize difference
-            beds_diff = abs(row["BEDS"] - beds) / max(
-                df["BEDS"]
-            )  # Normalize difference
-            baths_diff = abs(row["BATH"] - baths) / max(
-                df["BATH"]
-            )  # Normalize difference
-            state_diff = (
-                1 if row["STATE"] != state else 0
-            )  # Penalize if state does not match
-
+            price_diff = abs(row['PRICE'] - price) / max(df['PRICE'])  # Normalize difference
+            sqrt_diff = abs(row['PROPERTYSQFT'] - sqrt) / max(df['PROPERTYSQFT'])  # Normalize difference
+            beds_diff = abs(row['BEDS'] - beds) / max(df['BEDS'])  # Normalize difference
+            baths_diff = abs(row['BATH'] - baths) / max(df['BATH'])  # Normalize difference
+            state_diff = 1 if row['STATE'] != state else 0  # Penalize if state does not match
+            
             # Calculate similarity score (lower score means more similar)
             return price_diff + sqrt_diff + beds_diff + baths_diff + state_diff
 
         # Apply the similarity score function to each row in the dataframe
-        df["similarity_score"] = df.apply(calculate_similarity, axis=1)
+        df['similarity_score'] = df.apply(calculate_similarity, axis=1)
 
         # Get top 150 recommendations based on similarity score
-        top_recommendations = df.sort_values(by="similarity_score").head(150)
+        top_recommendations = df.sort_values(by='similarity_score').head(150)
 
         # Format recommendations for response
         results = []
         for i, row in top_recommendations.iterrows():
-            results.append(
-                {
-                    "Address": row["FORMATTED_ADDRESS"],
-                    "Price": row["PRICE"],
-                    "Beds": row["BEDS"],
-                    "Baths": round(row["BATH"]),
-                    "PropertySqrt": f" {round(row['PROPERTYSQFT'])} sq",
-                    "Longitute": row["LATITUDE"],
-                    "Latitude": row["LONGITUDE"],
-                }
-            )
+            results.append({
+                'Address': row['FORMATTED_ADDRESS'],
+                'Price': row['PRICE'],
+                'Beds': row['BEDS'],
+                'Baths': row['BATH'],
+                'PropertySqrt': f" {round(row['PROPERTYSQFT'])} sq",
+                'Longitute': row['LATITUDE'],
+                'Latitude': row['LONGITUDE']
+            })
 
         return jsonify(results)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({'error': str(e)}), 400
     
 
 
