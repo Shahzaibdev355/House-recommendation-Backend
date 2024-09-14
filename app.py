@@ -121,8 +121,18 @@ def predict():
 
 @app.route('/states', methods=['GET'])
 def get_states():
-    return send_from_directory(directory='.', path='https://raw.githubusercontent.com/Shahzaibdev355/House-recommendation-Backend/master/state_name.json', as_attachment=False)
-
+    try:
+        # Fetch the JSON data from the URL
+        response = requests.get('https://raw.githubusercontent.com/Shahzaibdev355/House-recommendation-Backend/master/state_name.json')
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Return the JSON content
+            return jsonify(response.json())
+        else:
+            return jsonify({'error': 'Failed to fetch state data'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 
