@@ -1,3 +1,8 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU
+
+
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS  # Import the CORS library
 import numpy as np
@@ -6,16 +11,20 @@ from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 import pickle
 
+
+
+import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
+
 app = Flask(__name__)
 
-# Enable CORS for all routes and allow requests from any origin
 CORS(app)
 
 # Load your model
 model = load_model('new_model.h5')
 
 # Load your data
-df = pd.read_csv("https://raw.githubusercontent.com/Shahzaibdev355/House-recommendation-Backend/master/NY-House-Dataset.csv")
+df = pd.read_csv(r"https://raw.githubusercontent.com/Shahzaibdev355/House-recommendation-Backend/master/NY-House-Dataset.csv")
 
 # Initialize the MinMaxScaler and fit it using the training data (same as during training)
 ms = MinMaxScaler()
@@ -26,12 +35,10 @@ with open('state_label_encoder.pkl', 'rb') as f:
     le = pickle.load(f)
 
 
-
 # Route to test if the backend is working
 @app.route('/test', methods=['GET'])
 def test():
-    return jsonify({"message": "Backend is working"}), 200
-
+    return jsonify({"message": "Backend is working"}), 200   
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -122,4 +129,4 @@ def get_states():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
